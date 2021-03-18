@@ -34,7 +34,7 @@ namespace ToDoList.Controllers
     return RedirectToAction("Index");
     }
 
-     public ActionResult Details(int id)
+    public ActionResult Details(int id)
     {
       var thisCategory = _db.Categories
           .Include(category => category.JoinEntities)

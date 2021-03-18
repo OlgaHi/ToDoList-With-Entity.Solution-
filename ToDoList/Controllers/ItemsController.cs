@@ -24,7 +24,7 @@ namespace ToDoList.Controllers
     public ActionResult Details(int id)
     {
       var thisItem = _db.Items //list of items
-        .Include(item => item.JoinEntities) //collection of join entities
+        .Include(item => item.JoinEntities) //collection of join entities, reference to a relationship
         .ThenInclude(join => join.Category) // category of each category item
         .FirstOrDefault(item => item.ItemId == id); // which item
       return View(thisItem);

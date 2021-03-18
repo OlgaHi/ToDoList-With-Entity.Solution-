@@ -6,7 +6,7 @@ namespace ToDoList.Models
     {
         public Category()
         {
-            this.JoinEntities = new HashSet<CategoryItem>();
+            this.JoinEntities = new HashSet<CategoryItem>(); // collection navigation property, similar to dictionary, but with unique entities
         }
 
         public int CategoryId { get; set; }
