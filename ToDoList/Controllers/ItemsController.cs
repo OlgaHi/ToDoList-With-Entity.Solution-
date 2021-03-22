@@ -4,27 +4,38 @@ using System.Collections.Generic; // to be able to use lists, dictionary
 using System.Linq;// ORM, to be able query objects
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc.Rendering; //html helpers
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity; //controller can interact with users from the database
+using System.Threading.Tasks; //to call async methods
+using System.Security.Claims;
 
 namespace ToDoList.Controllers
 {
+  [Authorize]
   public class ItemsController : Controller
   {
     private readonly ToDoListContext _db;
 
-    public ItemsController(ToDoListContext db)
+    private readonly UserManager<ApplicationUser> _userManager;
+
+    public ItemsController(UserManager<ApplicationUser> userManager, ToDoListContext db)
     {
+      _userManager = userManager;
       _db = db;
     }
 
-    public ActionResult Index()
+    public async Task<ActionResult> Index()
     {
-      return View(_db.Items.ToList());
+      var userId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      var currentUser = await _userManager.FindByIdAsync(userId);
+      var userItems = _db.Items.Where(entry => entry.User.Id == currentUser.Id).ToList();
+      return View(userItems);
     }
 
     public ActionResult Details(int id)
     {
       var thisItem = _db.Items //list of items
-        .Include(item => item.JoinEntities) //collection of join entities, reference to a relationship
+        .Include(item => item.Categories) //collection of join entities, reference to a relationship
         .ThenInclude(join => join.Category) // category of each category item
         .FirstOrDefault(item => item.ItemId == id); // which item
       return View(thisItem);
@@ -37,18 +48,19 @@ namespace ToDoList.Controllers
     }
 
     [HttpPost]
-    public ActionResult Create(Item item, int CategoryId)
+    public async Task<ActionResult> Create(Item item, int CategoryId)
     {
+      var userId = this.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+      var currentUser = await _userManager.FindByIdAsync(userId);
+      item.User = currentUser;
       _db.Items.Add(item);
-      _db.SaveChanges();
       if (CategoryId != 0)
       {
-        _db.CategoryItem.Add(new CategoryItem() { CategoryId = CategoryId, ItemId = item.ItemId }); // make association between category and item
+        _db.CategoryItem.Add(new CategoryItem() { CategoryId = CategoryId, ItemId = item.ItemId });
       }
-      _db.SaveChanges();
-      return RedirectToAction("Index");
-    }
-
+    _db.SaveChanges();
+    return RedirectToAction("Index");
+}
     public ActionResult Edit(int id)
     {
       var thisItem = _db.Items.FirstOrDefault(item => item.ItemId == id);

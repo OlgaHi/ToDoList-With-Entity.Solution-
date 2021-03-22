@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace ToDoList.Models
 {
-  public class ToDoListContext : IdentityDbContext<ApplicationUser>
+  public class ToDoListContext : IdentityDbContext<ApplicationUser> //extends from IdentityDbContext
   {
     public virtual DbSet<Category> Categories { get; set; }
     public DbSet<Item> Items { get; set; }
